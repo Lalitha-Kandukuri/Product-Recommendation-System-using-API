@@ -85,3 +85,8 @@ This project was developed as part of a frontend + AI integration task to demons
 - Product recommendation filtering
 - Clean and maintainable code structure
 
+---
+
+## 🖼️ Adding Preview Image
+
+<img width="1146" height="807" alt="image" src="https://github.com/user-attachments/assets/8f32cf47-e05c-4111-a537-840eed6a45d9" />
