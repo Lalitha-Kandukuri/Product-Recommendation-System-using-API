@@ -1,0 +1,352 @@
+/* Minimalist AI Product Recommender Stylesheet (Matches mockup image perfectly) */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-app: #ffffff;
+  --bg-card: #ffffff;
+  --border-card: #e2e8f0;
+  
+  --text-dark: #000000;
+  --text-grey: #6b7280;
+  --text-light-grey: #9ca3af;
+  
+  --btn-recommend: #71717a; /* Charcoal grey */
+  --btn-recommend-hover: #52525b;
+  
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-dark);
+  min-height: 100vh;
+  line-height: 1.5;
+  padding: 2.5rem 1.5rem;
+}
+
+.app-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Header section */
+.recommender-header-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recommender-title {
+  font-family: var(--font-sans);
+  font-size: 2.2rem;
+  font-weight: 750;
+  color: var(--text-dark);
+  letter-spacing: -0.02em;
+}
+
+.recommender-subtitle {
+  font-size: 1.05rem;
+  color: #4b5563;
+  font-weight: 400;
+}
+
+/* Recommender Input Row */
+.recommender-input-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+@media (max-width: 600px) {
+  .recommender-input-row {
+    flex-direction: column;
+  }
+}
+
+.recommender-input {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  outline: none;
+  color: var(--text-dark);
+  transition: border-color 0.2s ease;
+}
+.recommender-input::placeholder {
+  color: var(--text-light-grey);
+}
+.recommender-input:focus {
+  border-color: #71717a;
+}
+
+.btn-recommend {
+  background-color: var(--btn-recommend);
+  color: #ffffff;
+  border: none;
+  padding: 0.8rem 1.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+.btn-recommend:hover:not(:disabled) {
+  background-color: var(--btn-recommend-hover);
+}
+.btn-recommend:disabled {
+  background-color: #a1a1aa;
+  cursor: not-allowed;
+}
+
+/* AI Settings Button */
+.btn-settings {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-grey);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+.btn-settings:hover {
+  background-color: #f3f4f6;
+  color: var(--text-dark);
+}
+
+/* Catalog Title styling */
+.catalog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.catalog-title {
+  font-family: var(--font-sans);
+  font-size: 1.45rem;
+  font-weight: 750;
+  color: var(--text-dark);
+}
+
+/* Grid Layout */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+/* Product Card - Clean & Flat */
+.product-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform 0.2s ease;
+}
+
+.card-title {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.card-meta {
+  font-size: 0.9rem;
+  color: var(--text-grey);
+  margin-bottom: 0.5rem;
+}
+.card-meta strong {
+  color: var(--text-dark);
+}
+
+.card-description {
+  font-size: 0.95rem;
+  color: var(--text-grey);
+  line-height: 1.5;
+}
+
+/* AI Explanation Box callout */
+.ai-explanation-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.85rem 1.2rem;
+  margin-top: 0.5rem;
+}
+
+.ai-explanation-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #374151;
+  gap: 1rem;
+}
+@media (max-width: 600px) {
+  .ai-explanation-text {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.btn-clear-ai {
+  background: #e5e7eb;
+  border: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.btn-clear-ai:hover {
+  background: #cbd5e1;
+}
+
+/* Settings Modal */
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-modal {
+  width: 90%;
+  max-width: 400px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-grey);
+}
+.btn-close-modal:hover {
+  color: var(--text-dark);
+}
+
+.settings-modal h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.setting-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.provider-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+.provider-btn {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #4b5563;
+}
+.provider-btn.active {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  color: var(--text-dark);
+}
+
+.settings-input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  outline: none;
+}
+.settings-input:focus {
+  border-color: #6b7280;
+}
+
+.api-note {
+  font-size: 0.75rem;
+  color: var(--text-grey);
+  background: #f9fafb;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px dashed #e5e7eb;
+}
+
+.btn-save-settings {
+  background: var(--btn-recommend);
+  color: #fff;
+  border: none;
+  padding: 0.65rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-save-settings:hover {
+  background: var(--btn-recommend-hover);
+}
+
+.empty-catalog {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-grey);
+  border: 1px dashed #e2e8f0;
+  border-radius: 14px;
+}
