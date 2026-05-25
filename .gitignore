@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets and Local Configurations
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+.vercel

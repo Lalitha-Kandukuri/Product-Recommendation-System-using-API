@@ -1,11 +1,7 @@
 import { products } from '../data/products';
 
-/**
- * Unified recommendation service supporting:
- * 1. Strict deterministic Local NLP engine (solves filtering issues)
- * 2. Google Gemini API (gemini-2.5-flash)
- * 3. OpenAI API (gpt-4o-mini)
- */
+// Hardcoded OpenRouter API Key
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 
 // Helper to simulate text streaming
 export const streamText = (fullText, callback, speed = 10) => {
@@ -20,7 +16,7 @@ export const streamText = (fullText, callback, speed = 10) => {
   return () => clearInterval(interval);
 };
 
-// --- STRICT LOCAL PARSING ENGINE ---
+// --- STRICT LOCAL PARSING ENGINE (Saves the app when API is rate-limited) ---
 function getLocalRecommendations(query) {
   const lowercaseQuery = query.toLowerCase().trim();
   
@@ -34,18 +30,23 @@ function getLocalRecommendations(query) {
     targetCategory = "Headphones";
   }
 
-  // 2. Extract Price Constraints (e.g. "under $500")
+  // 2. Extract Price Constraints (e.g. "under $500", "above 1000", "below 1500")
   let maxPrice = null;
   let minPrice = null;
 
-  const underMatch = lowercaseQuery.match(/(?:under|below|less than|cheaper than|\b<\b)\s*\$?(\d+)/);
-  if (underMatch) {
-    maxPrice = parseInt(underMatch[1], 10);
+  const underMatches = lowercaseQuery.match(/(?:under|below|less than|cheaper than|\b<\b)\s*\$?(\d+)/g);
+  if (underMatches) {
+    // If multiple under/below are matched, take the last one or do custom parsing
+    const lastMatch = underMatches[underMatches.length - 1];
+    const matchVal = lastMatch.match(/\d+/);
+    if (matchVal) maxPrice = parseInt(matchVal[0], 10);
   }
 
-  const overMatch = lowercaseQuery.match(/(?:over|above|greater than|more than|\b>\b)\s*\$?(\d+)/);
-  if (overMatch) {
-    minPrice = parseInt(overMatch[1], 10);
+  const overMatches = lowercaseQuery.match(/(?:over|above|greater than|more than|\b>\b)\s*\$?(\d+)/g);
+  if (overMatches) {
+    const lastMatch = overMatches[overMatches.length - 1];
+    const matchVal = lastMatch.match(/\d+/);
+    if (matchVal) minPrice = parseInt(matchVal[0], 10);
   }
 
   // 3. Perform Strict Filtering
@@ -82,7 +83,7 @@ function getLocalRecommendations(query) {
   let explanation = "";
   if (recommendedIds.length > 0) {
     const listNames = matchedProducts.map(p => `**${p.name}** ($${p.price})`).join(", ");
-    explanation = `I found **${matchedProducts.length}** product(s) matching your request: ${listNames}.`;
+    explanation = `Based on your request, I found **${matchedProducts.length}** product(s) matching your criteria: ${listNames}.`;
   } else {
     explanation = "I couldn't find any products in our catalog matching your exact search criteria. Try modifying your price threshold or category filter.";
   }
@@ -90,7 +91,7 @@ function getLocalRecommendations(query) {
   return { recommendedIds, explanation };
 }
 
-// --- SYSTEM INSTRUCTION FOR CLOUD MODELS ---
+// System instruction prompt for DeepSeek
 const getSystemInstruction = () => {
   return `You are a shopping assistant that strictly recommends products from our catalog.
 Here is our catalog data: ${JSON.stringify(products.map(p => ({
@@ -105,57 +106,29 @@ Here is our catalog data: ${JSON.stringify(products.map(p => ({
 You must respond in strict JSON format matching this schema:
 {
   "recommendedIds": [number], // Array of matching product IDs. Filter strictly based on the user's requirements (e.g. if they say "under $500", do NOT include products >= $500!).
-  "explanation": "string"      // A neat, simple line summarizing the matches. Keep it under 100 words. Make sure to bold matching product names like **product name**.
+  "explanation": "string"      // A neat, simple line in natural language explaining why these specific items match. Keep it under 80 words. Make sure to bold matching product names like **product name**.
 }
 
-Enforce strict price and category limits! If no products match, return an empty array [] for recommendedIds.`;
+Enforce strict price and category limits! If no products match, return an empty array [] for recommendedIds and a polite note.`;
 };
 
-// --- GEMINI API CALL ---
-async function fetchGeminiRecommendations(query, apiKey) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+// --- OPENROUTER DEEPSEEK API CALL ---
+async function fetchOpenRouterRecommendations(query) {
+  if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === "<OPENROUTER_API_KEY>") {
+    throw new Error("OpenRouter API Key is missing. Please provide the key to enable AI recommendations.");
+  }
+
+  const url = "https://openrouter.ai/api/v1/chat/completions";
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "HTTP-Referer": "https://product-recommender-api.vercel.app", 
+      "X-Title": "AI Product Recommender"
     },
     body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `${getSystemInstruction()}\n\nUser request: "${query}"`
-        }]
-      }],
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API Error: ${response.status} - ${errText}`);
-  }
-
-  const data = await response.json();
-  const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!responseText) {
-    throw new Error("Empty response received from Gemini.");
-  }
-
-  return JSON.parse(responseText.trim());
-}
-
-// --- OPENAI API CALL ---
-async function fetchOpenAiRecommendations(query, apiKey) {
-  const url = "https://api.openai.com/v1/chat/completions";
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "deepseek/deepseek-v4-flash:free",
       messages: [
         {
           role: "system",
@@ -166,34 +139,43 @@ async function fetchOpenAiRecommendations(query, apiKey) {
           content: query
         }
       ],
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
+      extra_body: {
+        reasoning: {
+          enabled: true
+        }
+      }
     })
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`OpenAI API Error: ${response.status} - ${errText}`);
+    throw new Error(`OpenRouter API Error: ${response.status} - ${errText}`);
   }
 
   const data = await response.json();
   const responseText = data.choices?.[0]?.message?.content;
   if (!responseText) {
-    throw new Error("Empty response received from OpenAI.");
+    throw new Error("Empty response received from OpenRouter.");
   }
 
-  return JSON.parse(responseText.trim());
+  try {
+    return JSON.parse(responseText.trim());
+  } catch (parseError) {
+    console.error("Failed to parse JSON response from DeepSeek:", responseText);
+    throw new Error("Received invalid formatting from AI model. Please try again.");
+  }
 }
 
-// --- UNIFIED CONTROLLER ---
-export async function getRecommendations(query, provider = "local", apiKey = "") {
-  if (provider === "gemini") {
-    if (!apiKey) throw new Error("Google Gemini API Key is required.");
-    return await fetchGeminiRecommendations(query, apiKey);
-  } else if (provider === "openai") {
-    if (!apiKey) throw new Error("OpenAI API Key is required.");
-    return await fetchOpenAiRecommendations(query, apiKey);
-  } else {
-    // Local fallback
+// --- UNIFIED CONTROLLER WITH SEAMLESS FALLBACK ---
+export async function getRecommendations(query) {
+  try {
+    // 1. Try to fetch from OpenRouter DeepSeek
+    return await fetchOpenRouterRecommendations(query);
+  } catch (error) {
+    console.warn("OpenRouter API failed or is rate-limited. Falling back to local strict filtering:", error);
+    
+    // 2. Silently fall back to our local parser if OpenRouter is rate-limited (429) or offline!
     return getLocalRecommendations(query);
   }
 }
